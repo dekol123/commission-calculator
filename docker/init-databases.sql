@@ -1,0 +1,3 @@
+CREATE DATABASE users_db;
+CREATE DATABASE accrual_db;
+CREATE DATABASE wallet_db;
