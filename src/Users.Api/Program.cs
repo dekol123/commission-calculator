@@ -1,31 +1,11 @@
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
-using Users.Api.Data;
+using Users.Api.DependencyInjection;
 using Users.Api.Observability;
-using Users.Api.Services;
+using Users.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers().AddJsonOptions(options =>
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-    options.SwaggerDoc("v1", new() { Title = "Users", Version = "v1" }));
-
-var connectionString = builder.Configuration.GetConnectionString("Database")
-    ?? throw new InvalidOperationException("Connection string 'Database' is required.");
-
-builder.Services.AddDbContext<UsersDb>(options =>
-{
-    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(5));
-    options.UseSnakeCaseNamingConvention();
-});
-builder.Services.AddScoped<UserTreeService>();
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString, name: "database", tags: ["ready"]);
-
-builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
+builder.Services.AddUsers(builder.Configuration);
 builder.WebHost.UseShutdownTimeout(TimeSpan.FromSeconds(20));
 
 var app = builder.Build();

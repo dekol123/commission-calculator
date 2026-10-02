@@ -1,59 +1,10 @@
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Http.Resilience;
 using Prometheus;
-using Wallet.Api.Clients;
-using Wallet.Api.Data;
-using Wallet.Api.Observability;
-using Wallet.Api.Workers;
+using Wallet.Api.DependencyInjection;
+using Wallet.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers().AddJsonOptions(options =>
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-    options.SwaggerDoc("v1", new() { Title = "Wallet", Version = "v1" }));
-
-var connectionString = builder.Configuration.GetConnectionString("Database")
-    ?? throw new InvalidOperationException("Connection string 'Database' is required.");
-
-builder.Services.AddDbContext<WalletDb>(options =>
-{
-    options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(5));
-    options.UseSnakeCaseNamingConvention();
-});
-builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IWalletMetrics, WalletMetrics>();
-builder.Services.AddScoped<InboxService>();
-builder.Services.AddScoped<WalletQueryService>();
-builder.Services.AddScoped<PayoutProcessor>();
-builder.Services.Configure<PayoutOptions>(builder.Configuration.GetSection(PayoutOptions.SectionName));
-builder.Services.AddHostedService<PayoutWorker>();
-
-builder.Services.AddTransient<CorrelationPropagationHandler>();
-var accrualAddress = builder.Configuration["Accrual:BaseAddress"];
-if (string.IsNullOrWhiteSpace(accrualAddress))
-    throw new InvalidOperationException("Accrual:BaseAddress is required.");
-if (!accrualAddress.EndsWith('/'))
-    accrualAddress += "/";
-
-builder.Services.AddHttpClient<IAccrualClient, AccrualHttpClient>(client => client.BaseAddress = new Uri(accrualAddress))
-    .AddHttpMessageHandler<CorrelationPropagationHandler>()
-    .AddHttpMessageHandler(sp => new HttpClientErrorHandler(sp.GetRequiredService<IWalletMetrics>(), "accrual"))
-    .AddStandardResilienceHandler(options =>
-    {
-        options.Retry.MaxRetryAttempts = 2;
-        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(3);
-        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(20);
-        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
-        options.CircuitBreaker.MinimumThroughput = 4;
-        options.CircuitBreaker.FailureRatio = 0.5;
-        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(15);
-    });
-
-builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "database", tags: ["ready"]);
-builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
+builder.Services.AddWallet(builder.Configuration);
 builder.WebHost.UseShutdownTimeout(TimeSpan.FromSeconds(20));
 
 var app = builder.Build();

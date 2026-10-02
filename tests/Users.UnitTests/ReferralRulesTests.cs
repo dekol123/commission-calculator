@@ -1,4 +1,4 @@
-using Users.Api.Domain;
+using Users.Domain;
 
 namespace Users.UnitTests;
 

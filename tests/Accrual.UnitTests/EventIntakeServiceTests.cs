@@ -1,5 +1,5 @@
-using Accrual.Api.Application;
-using Accrual.Api.Domain;
+using Accrual.Application;
+using Accrual.Domain;
 using Contracts;
 using Microsoft.Extensions.Logging.Abstractions;
 

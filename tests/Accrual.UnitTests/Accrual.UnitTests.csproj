@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Accrual.Api\Accrual.Api.csproj" />
+    <ProjectReference Include="..\..\src\Accrual.Domain\Accrual.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Accrual.Application\Accrual.Application.csproj" />
   </ItemGroup>
 
 </Project>

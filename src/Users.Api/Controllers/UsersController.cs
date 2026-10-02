@@ -1,13 +1,14 @@
 using Contracts;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Users.Api.Domain;
-using Users.Api.Services;
+using Users.Application;
+using Users.Domain;
 
 namespace Users.Api.Controllers;
 
 [ApiController]
 [Route("users")]
-public sealed class UsersController(UserTreeService users) : ControllerBase
+public sealed class UsersController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request, CancellationToken cancellationToken)
@@ -15,11 +16,11 @@ public sealed class UsersController(UserTreeService users) : ControllerBase
         if (request is null || !ExternalIds.IsValid(request.ExternalId))
             return BadRequest(new ErrorResponse("External id is required and must be at most 128 characters."));
 
-        var (user, created) = await users.CreateAsync(request.ExternalId, cancellationToken);
-        if (!created)
-            return Ok(user);
+        var result = await mediator.Send(new CreateUserCommand(request.ExternalId), cancellationToken);
+        if (!result.Created)
+            return Ok(result.User);
 
-        return Created($"/users/{Uri.EscapeDataString(user.ExternalId)}/up", user);
+        return Created($"/users/{Uri.EscapeDataString(result.User.ExternalId)}/up", result.User);
     }
 
     [HttpPut("{externalId}/referrer")]
@@ -31,7 +32,7 @@ public sealed class UsersController(UserTreeService users) : ControllerBase
         if (!ExternalIds.IsValid(externalId) || request is null || !ExternalIds.IsValid(request.ReferrerExternalId))
             return BadRequest(new ErrorResponse("External id is required and must be at most 128 characters."));
 
-        var result = await users.AssignReferrerAsync(externalId, request.ReferrerExternalId, cancellationToken);
+        var result = await mediator.Send(new AssignReferrerCommand(externalId, request.ReferrerExternalId), cancellationToken);
         return result switch
         {
             ReferralChange.Updated => NoContent(),
@@ -48,21 +49,21 @@ public sealed class UsersController(UserTreeService users) : ControllerBase
         if (!ExternalIds.IsValid(externalId))
             return BadRequest(new ErrorResponse("External id is required and must be at most 128 characters."));
 
-        var cleared = await users.ClearReferrerAsync(externalId, cancellationToken);
+        var cleared = await mediator.Send(new ClearReferrerCommand(externalId), cancellationToken);
         return cleared ? NoContent() : NotFound(new ErrorResponse("User was not found."));
     }
 
     [HttpGet("{externalId}/up")]
     public async Task<ActionResult<IReadOnlyList<TreeNodeResponse>>> Up(string externalId, CancellationToken cancellationToken)
     {
-        var ancestors = await users.AncestorsAsync(externalId, cancellationToken);
+        var ancestors = await mediator.Send(new GetAncestorsQuery(externalId), cancellationToken);
         return ancestors is null ? NotFound(new ErrorResponse("User was not found.")) : Ok(ancestors);
     }
 
     [HttpGet("{externalId}/down")]
     public async Task<ActionResult<IReadOnlyList<TreeNodeResponse>>> Down(string externalId, CancellationToken cancellationToken)
     {
-        var descendants = await users.DescendantsAsync(externalId, cancellationToken);
+        var descendants = await mediator.Send(new GetDescendantsQuery(externalId), cancellationToken);
         return descendants is null ? NotFound(new ErrorResponse("User was not found.")) : Ok(descendants);
     }
 

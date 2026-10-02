@@ -1,4 +1,4 @@
-using Accrual.Api.Domain;
+using Accrual.Domain;
 using Contracts;
 
 namespace Accrual.UnitTests;
