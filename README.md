@@ -14,7 +14,7 @@
 
 ## Слои
 
-Каждый сервис разложен по Clean Architecture. HTTP-контроллеры только проверяют транспорт и вызывают MediatR. Команды и запросы живут в Application (CQRS). Domain держит правила и сущности. Infrastructure — EF Core, HTTP-клиенты, outbox и фоновые воркеры. `Program.cs` остаётся composition root и вызывает `AddUsers`, `AddAccrual` или `AddWallet`. Сама регистрация лежит в `DependencyInjection/DependencyInjection.cs`: MediatR в Application, EF, HTTP и воркеры в Infrastructure, контроллеры и Swagger в Api.
+Проекты каждого сервиса лежат в своей папке: `src/Users`, `src/Accrual`, `src/Wallet`. Общие DTO остаются в `src/Contracts`. Каждый сервис разложен по Clean Architecture. HTTP-контроллеры только проверяют транспорт и вызывают MediatR. Команды и запросы живут в Application (CQRS). Domain держит правила и сущности. Infrastructure — EF Core, HTTP-клиенты, outbox и фоновые воркеры. `Program.cs` остаётся composition root и вызывает `AddUsers`, `AddAccrual` или `AddWallet`. Сама регистрация лежит в `DependencyInjection/DependencyInjection.cs`: MediatR в Application, EF, HTTP и воркеры в Infrastructure, контроллеры и Swagger в Api.
 
 Воркеры (отложенный расчёт, outbox, выплаты) не проходят через MediatR. Они остаются в Infrastructure и крутятся по таймеру.
 

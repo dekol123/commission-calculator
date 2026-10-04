@@ -53,7 +53,7 @@ services:
   users:
     build:
       context: .
-      dockerfile: src/Users.Api/Dockerfile
+      dockerfile: src/Users/Users.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: Host=postgres-users;Port=5432;Database=users_db;Username=app;Password=app;Maximum Pool Size=20
@@ -72,7 +72,7 @@ services:
   accrual:
     build:
       context: .
-      dockerfile: src/Accrual.Api/Dockerfile
+      dockerfile: src/Accrual/Accrual.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: Host=postgres-accrual;Port=5432;Database=accrual_db;Username=app;Password=app;Maximum Pool Size=20
@@ -94,7 +94,7 @@ services:
   accrual-worker:
     build:
       context: .
-      dockerfile: src/Accrual.Api/Dockerfile
+      dockerfile: src/Accrual/Accrual.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: Host=postgres-accrual;Port=5432;Database=accrual_db;Username=app;Password=app;Maximum Pool Size=20
@@ -114,7 +114,7 @@ services:
   wallet:
     build:
       context: .
-      dockerfile: src/Wallet.Api/Dockerfile
+      dockerfile: src/Wallet/Wallet.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: Host=postgres-wallet;Port=5432;Database=wallet_db;Username=app;Password=app;Maximum Pool Size=20
@@ -135,7 +135,7 @@ services:
   wallet-worker:
     build:
       context: .
-      dockerfile: src/Wallet.Api/Dockerfile
+      dockerfile: src/Wallet/Wallet.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: Host=postgres-wallet;Port=5432;Database=wallet_db;Username=app;Password=app;Maximum Pool Size=20

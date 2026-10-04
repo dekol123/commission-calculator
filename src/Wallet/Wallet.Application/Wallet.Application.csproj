@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wallet.Domain\Wallet.Domain.csproj" />
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\Contracts\Contracts.csproj" />
   </ItemGroup>
 
 </Project>
